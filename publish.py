@@ -1,4 +1,7 @@
-# from gripcontrol import GripPubControl
+import time
+
+import consul
+from gripcontrol import GripPubControl
 
 from pubcontrol import PubControl, PubControlClient, Item, Format
 
@@ -10,7 +13,6 @@ class HttpResponseFormat(Format):
     def export(self):
         return {'body': self.body}
 
-import time
 
 def callback(result, message):
     if result:
@@ -18,19 +20,35 @@ def callback(result, message):
     else:
         print('Publish failed with message: ' + message)
 
+controls = []
 
-pub = PubControl(
-       {'zmq_uri': 'tcp://pushpin:5563',
-        'require_subscribers': False}
-)
-#{
-#    'control_uri': 'http://pushpin:5561'
-#})
+c = consul.Consul()
+'''
+i, services = c.catalog.service('pushpin-5561')
+for service in services:
+    print service['ServiceAddress'], service['ServicePort']
+    controls += [{'control_uri': 'http://{ServiceAddress}:{ServicePort}'.format(**service)}]
 
-#pub.apply_grip_config({'control_zmq_uri': 'tcp://pushpin:5563',
-#        'require_subscribers': True})
+pub = GripPubControl(controls)
 
 for i in range(100):
+    print ("sending")
     time.sleep(10)
-    pub.publish('mychannel', Item(HttpResponseFormat('{"hello": "world"}\n')), blocking=True, callback=callback)
+    pub.publish_http_response('mychannel', '{"hello": "world"}\n', blocking=False, callback=callback)
+'''
+
+zmq_controls = []
+i, services = c.catalog.service('pushpin-5562')
+for service in services:
+    print service['ServiceAddress'], service['ServicePort']
+    zmq_controls += [{'zmq_pub_uri': 'tcp://{ServiceAddress}:{ServicePort}'.format(**service), 'require_subscribers': True}]
+
+
+print zmq_controls
+pub = PubControl(zmq_controls)
+
+for i in range(100):
+    print ("sending")
+    time.sleep(10)
+    pub.publish('mychannel', Item(HttpResponseFormat('{"hello": "world"}\n')), blocking=False, callback=callback)
 

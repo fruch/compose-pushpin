@@ -1,4 +1,5 @@
+python-consul
 bottle
 gripcontrol
 pyzmq
-tnetstring3
+tnetstring
