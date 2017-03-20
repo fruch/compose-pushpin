@@ -1,0 +1,46 @@
+version: '2'
+
+services:
+    app:
+        build: .
+        volumes:
+            - .:/code
+        ports:
+            - 5000:8080
+
+    pub:
+        build:
+            context: .
+            dockerfile: Dockerfile-publish
+        volumes:
+            - .:/code
+        links:
+            - pushpin
+            - pushpin-b
+            - pushpin-c
+    pushpin:
+        environment:
+            - LOGNAME=nobody
+
+        image: fanout/pushpin
+        links:
+            - app
+        ports:
+            - "7999:7999"
+
+    pushpin-b:
+
+        image: fanout/pushpin
+        links:
+            - app
+        environment:
+            - LOGNAME=nobody
+
+    pushpin-c:
+
+        image: fanout/pushpin
+        links:
+            - app
+
+        environment:
+            - LOGNAME=nobody
