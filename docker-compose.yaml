@@ -1,21 +1,33 @@
 version: '2'
 
 services:
-    app:
-        build: .
-        volumes:
-            - .:/code
-        ports:
-            - 5000:8080
-
-    pub:
-        build:
+    backend:
+        cpu_quota: 200000
+        mem_limit: 512mb
+        build: 
             context: .
-            dockerfile: Dockerfile-publish
-        volumes:
-            - .:/code
+            dockerfile: dockerfile-nodejs
+#       build: .
+        ports:
+            - 8080
+
+    app:
+        build: ./haproxy
+        expose: 
+            - 8080
+        ports:
+            - 8080
         links:
-            - pushpin
+            - consul
+
+#    pub:
+#        build:
+#            context: .
+#            dockerfile: Dockerfile-publish
+#        volumes:
+#            - .:/code
+#        links:
+#            - pushpin
 
     consul:
         image:  gliderlabs/consul-server:latest
@@ -36,8 +48,8 @@ services:
             - /var/run/docker.sock:/tmp/docker.sock
 
     pushpin:
-        cpu_quota: 150000
-        mem_limit: 1024m
+        cpu_quota: 800000
+        mem_limit: 8g
         environment:
             - LOGNAME=nobody
         image: fanout/pushpin

@@ -1,5 +1,6 @@
 FROM fanout/pushpin
 
 RUN  sed -i \
-    -e 's/log_level=.*/log_level=7/' \
+    -e 's/log_level=.*/log_level=3/' \
+    -e 's/debug=.*/debug=true/' \
     /etc/pushpin/pushpin.conf
