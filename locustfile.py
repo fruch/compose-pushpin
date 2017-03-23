@@ -1,7 +1,12 @@
 from locust import HttpLocust, TaskSet
 
 def index(l):
-    l.client.get("/hello/test")
+    with l.client.get("/hello/test", catch_response=True) as response:
+        if response.status_code == 200:
+            response.success()
+        else:
+            response.failure("%d, %s" % (response.status_code, response.content))
+
 
 class UserBehavior(TaskSet):
     tasks = {index: 1}
